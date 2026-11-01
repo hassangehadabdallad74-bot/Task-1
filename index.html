@@ -1,336 +1,368 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تشفير وفك تشفير - Playfair & Vigenère</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --secondary: #0f172a;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --border: #e2e8f0;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--secondary);
-            margin: 0;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--primary);
-            margin-bottom: 30px;
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 25px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .card {
-            background: var(--card);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            border: 1px solid var(--border);
-        }
-
-        .card h2 {
-            margin-top: 0;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 10px;
-            font-size: 1.4rem;
-        }
-
-        label {
-            display: block;
-            margin: 15px 0 6px;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1rem;
-            direction: ltr;
-            text-align: left;
-            font-family: monospace;
-        }
-
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 18px;
-        }
-
-        button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1rem;
-            color: white;
-            background-color: var(--primary);
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-
-        button.decrypt-btn {
-            background-color: #10b981;
-        }
-
-        button.decrypt-btn:hover {
-            background-color: #059669;
-        }
-
-        .result-box {
-            margin-top: 20px;
-            padding: 14px;
-            background: #f1f5f9;
-            border-radius: 8px;
-            border-right: 4px solid var(--primary);
-            word-break: break-all;
-            direction: ltr;
-            text-align: left;
-            font-family: monospace;
-            font-size: 1.1rem;
-            min-height: 28px;
-        }
-
-        .matrix-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 42px);
-            gap: 6px;
-            margin: 15px auto 0;
-            justify-content: center;
-            direction: ltr;
-        }
-
-        .matrix-cell {
-            width: 42px;
-            height: 42px;
-            background: #e0e7ff;
-            color: #1e40af;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 1.1rem;
-        }
-
-        .note {
-            font-size: 0.82rem;
-            color: #64748b;
-            margin-top: 5px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classic Ciphers</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --text:#1c2333; --muted:#667085; --border:#dfe3ec;
+    --accent:#2f5bea; --accent2:#0f9d77; --danger:#d92d20; --code:#eef1f8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1420; --card:#171e2e; --text:#e7ebf5; --muted:#98a2b8; --border:#2a3350; --accent:#6f93ff; --accent2:#2dd4a3; --danger:#ff7b72; --code:#0f1524; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.6}
+  header{padding:28px 16px 8px;text-align:center}
+  .author{font-size:1.15rem;font-weight:700;color:var(--accent);margin-bottom:8px;letter-spacing:.5px}
+  header h1{margin:0;font-size:1.7rem}
+  header p{margin:6px 0 0;color:var(--muted)}
+  .wrap{max-width:900px;margin:0 auto;padding:16px}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}
+  .tab{border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:.95rem}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+  .card h2{margin:0 0 4px;font-size:1.3rem}
+  .desc{color:var(--muted);margin:0 0 16px;font-size:.95rem}
+  label{display:block;font-weight:600;margin:12px 0 4px;font-size:.92rem}
+  textarea,input[type=text],input[type=number],select{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);
+    font-family:ui-monospace,Consolas,monospace;font-size:1rem;direction:ltr;text-align:left}
+  textarea{min-height:90px;resize:vertical}
+  .check{display:flex;align-items:center;gap:8px;margin-top:12px;font-weight:500}
+  .check input{width:auto}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  button.btn{border:0;border-radius:10px;padding:10px 18px;font-size:1rem;cursor:pointer;color:#fff;background:var(--accent)}
+  button.btn.dec{background:var(--accent2)}
+  button.btn.sec{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .out{margin-top:18px}
+  .box{background:var(--code);border:1px solid var(--border);border-radius:10px;padding:12px;direction:ltr;text-align:left;
+    font-family:ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;min-height:44px}
+  .info{margin-top:10px;font-size:.9rem;color:var(--muted);white-space:pre;overflow-x:auto;direction:ltr;text-align:left;font-family:ui-monospace,Consolas,monospace}
+  .err{color:var(--danger);font-weight:600}
+  .note{margin-top:12px;font-size:.85rem;color:var(--muted)}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:20px}
+</style>
 </head>
 <body>
+<header>
+  <div class="author" dir="ltr">Hassan Jihad Abdualla</div>
+  <h1>🔐 الشفرات الكلاسيكية</h1>
+  <p>Playfair • Vigenère • Caesar • One-Time Pad • Columnar • Rail Fence • Hill</p>
+</header>
 
-    <h1>تطبيق التشفير: Playfair & Vigenère Cipher</h1>
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div class="card" id="panel"></div>
+</div>
+<footer>Hassan</footer>
 
-    <div class="container">
-        <!-- قسم Playfair Cipher -->
-        <div class="card">
-            <h2>1. Playfair Cipher</h2>
-            <label for="pf-key">المفتاح (Keyword - حروف إنجليزية):</label>
-            <input type="text" id="pf-key" placeholder="مثال: MONARCHY" oninput="updatePlayfairMatrix()">
-            <div class="note">* يتم دمج حرفي I و J في خانة واحدة تلقائياً.</div>
+<script>
+const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const mod = (n, m) => ((n % m) + m) % m;
+const isLetter = c => /[A-Za-z]/.test(c);
+const onlyLetters = s => s.toUpperCase().replace(/[^A-Z]/g, "");
+const fail = msg => { throw new Error(msg); };
 
-            <label>مصفوفة المفتاح (5x5):</label>
-            <div id="pf-matrix" class="matrix-grid"></div>
+function shiftChar(ch, s){
+  const c = ch.charCodeAt(0);
+  if (c >= 65 && c <= 90) return String.fromCharCode(65 + mod(c - 65 + s, 26));
+  if (c >= 97 && c <= 122) return String.fromCharCode(97 + mod(c - 97 + s, 26));
+  return ch;
+}
 
-            <label for="pf-text">النص (Plaintext / Ciphertext):</label>
-            <textarea id="pf-text" rows="3" placeholder="أدخل النص الإنجليزي هنا..."></textarea>
+/* ---------- 1) Playfair ---------- */
+function playfairSquare(key){
+  const seen = [];
+  for (const ch of (onlyLetters(key) + A).replace(/J/g, "I")) if (!seen.includes(ch)) seen.push(ch);
+  return seen; // 25 letters
+}
+function playfair(mode, text, p){
+  if (!onlyLetters(p.key)) fail("اكتب مفتاح (حروف إنجليزية).");
+  const sq = playfairSquare(p.key);
+  const pos = {}; sq.forEach((c, i) => pos[c] = [Math.floor(i / 5), i % 5]);
+  let t = onlyLetters(text).replace(/J/g, "I");
+  if (!t) fail("اكتب نص (حروف إنجليزية).");
+  let pairs = [];
+  if (mode === "enc"){
+    for (let i = 0; i < t.length;){
+      const a = t[i], b = t[i + 1];
+      if (b === undefined){ pairs.push([a, "X"]); i++; }
+      else if (a === b){ pairs.push([a, "X"]); i++; }
+      else { pairs.push([a, b]); i += 2; }
+    }
+  } else {
+    if (t.length % 2) fail("النص المشفر لازم يكون عدد حروفه زوجي.");
+    for (let i = 0; i < t.length; i += 2) pairs.push([t[i], t[i + 1]]);
+  }
+  const d = mode === "enc" ? 1 : -1;
+  const res = pairs.map(([a, b]) => {
+    const [r1, c1] = pos[a], [r2, c2] = pos[b];
+    if (r1 === r2) return sq[r1 * 5 + mod(c1 + d, 5)] + sq[r2 * 5 + mod(c2 + d, 5)];
+    if (c1 === c2) return sq[mod(r1 + d, 5) * 5 + c1] + sq[mod(r2 + d, 5) * 5 + c2];
+    return sq[r1 * 5 + c2] + sq[r2 * 5 + c1];
+  });
+  let grid = "";
+  for (let r = 0; r < 5; r++) grid += sq.slice(r * 5, r * 5 + 5).join(" ") + "\n";
+  return {
+    out: res.join(""),
+    info: "Key square (J = I):\n" + grid + "\nPairs: " + pairs.map(x => x.join("")).join(" ")
+  };
+}
 
-            <div class="btn-group">
-                <button onclick="handlePlayfair(true)">تشفير (Encrypt)</button>
-                <button class="decrypt-btn" onclick="handlePlayfair(false)">فك التشفير (Decrypt)</button>
-            </div>
+/* ---------- 2) Vigenere ---------- */
+function vigenere(mode, text, p){
+  const key = onlyLetters(p.key);
+  if (!key) fail("اكتب مفتاح (حروف إنجليزية).");
+  const d = mode === "enc" ? 1 : -1;
+  let i = 0, out = "";
+  for (const ch of text){
+    if (isLetter(ch)){ out += shiftChar(ch, d * (key.charCodeAt(i % key.length) - 65)); i++; }
+    else out += ch;
+  }
+  return { out, info: "Key: " + key };
+}
 
-            <label>النتيجة:</label>
-            <div id="pf-result" class="result-box"></div>
-        </div>
+/* ---------- 3) Caesar ---------- */
+function caesar(mode, text, p){
+  const s = parseInt(p.shift, 10);
+  if (isNaN(s)) fail("اكتب رقم الإزاحة.");
+  const d = mode === "enc" ? s : -s;
+  return { out: [...text].map(c => shiftChar(c, d)).join(""), info: "Shift: " + mod(s, 26) };
+}
 
-        <!-- قسم Vigenère Cipher -->
-        <div class="card">
-            <h2>2. Vigenère Cipher</h2>
-            <label for="vig-key">المفتاح (Keyword - حروف إنجليزية):</label>
-            <input type="text" id="vig-key" placeholder="مثال: KEY">
-            <div class="note">* يتم تكرار المفتاح بطول النص مع تجاهل المسافات والرموز.</div>
+/* ---------- 4) One-Time Pad ---------- */
+function otp(mode, text, p){
+  const key = onlyLetters(p.key);
+  const count = [...text].filter(isLetter).length;
+  if (!count) fail("اكتب نص فيه حروف إنجليزية.");
+  if (key.length < count) fail(`المفتاح لازم يكون على الأقل بطول النص (${count} حرف). اضغط "توليد مفتاح عشوائي".`);
+  const d = mode === "enc" ? 1 : -1;
+  let i = 0, out = "";
+  for (const ch of text){
+    if (isLetter(ch)){ out += shiftChar(ch, d * (key.charCodeAt(i) - 65)); i++; }
+    else out += ch;
+  }
+  return { out, info: "Letters processed: " + count + " | Key length: " + key.length + "\n(المفتاح لازم يُستخدم مرة واحدة فقط)" };
+}
+function randomKey(n){
+  const arr = new Uint32Array(n); crypto.getRandomValues(arr);
+  return [...arr].map(x => A[x % 26]).join("");
+}
 
-            <label for="vig-text">النص (Plaintext / Ciphertext):</label>
-            <textarea id="vig-text" rows="3" placeholder="أدخل النص الإنجليزي هنا..."></textarea>
+/* ---------- 5) Columnar Transposition ---------- */
+function columnarOrder(key){
+  return [...key].map((c, i) => [c, i]).sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] - b[1]).map(x => x[1]);
+}
+function columnar(mode, text, p){
+  const key = onlyLetters(p.key);
+  if (!key) fail("اكتب كلمة مفتاح (حروف إنجليزية).");
+  let t = p.nospace ? text.replace(/\s+/g, "") : text.replace(/\n/g, " ");
+  if (!t) fail("اكتب نص.");
+  const n = key.length, L = t.length, order = columnarOrder(key);
+  const rows = Math.ceil(L / n);
+  let out = "", grid = [];
+  if (mode === "enc"){
+    for (let r = 0; r < rows; r++) grid.push([...t.slice(r * n, r * n + n)]);
+    for (const c of order) for (let r = 0; r < rows; r++) if (grid[r][c] !== undefined) out += grid[r][c];
+  } else {
+    const rem = L % n;
+    const colLen = j => rem === 0 ? rows : (j < rem ? rows : rows - 1);
+    for (let r = 0; r < rows; r++) grid.push(new Array(n));
+    let pos = 0;
+    for (const c of order){ for (let r = 0; r < colLen(c); r++) grid[r][c] = t[pos++]; }
+    for (let r = 0; r < rows; r++) for (let c = 0; c < n; c++) if (grid[r][c] !== undefined) out += grid[r][c];
+  }
+  const header = [...key].join(" ");
+  const nums = [...key].map((_, i) => order.indexOf(i) + 1).join(" ");
+  const body = grid.map(r => [...Array(n)].map((_, i) => r[i] === undefined ? "·" : r[i]).join(" ")).join("\n");
+  return { out, info: header + "\n" + nums + "\n" + "-".repeat(n * 2 - 1) + "\n" + body };
+}
 
-            <div class="btn-group">
-                <button onclick="handleVigenere(true)">تشفير (Encrypt)</button>
-                <button class="decrypt-btn" onclick="handleVigenere(false)">فك التشفير (Decrypt)</button>
-            </div>
+/* ---------- 6) Rail Fence ---------- */
+function railPattern(len, rails){
+  const pat = []; let r = 0, d = 1;
+  for (let i = 0; i < len; i++){
+    pat.push(r);
+    if (r === 0) d = 1; else if (r === rails - 1) d = -1;
+    r += d;
+  }
+  return pat;
+}
+function railFence(mode, text, p){
+  const rails = parseInt(p.rails, 10);
+  if (isNaN(rails) || rails < 2) fail("عدد القضبان لازم يكون 2 أو أكتر.");
+  const t = p.nospace ? text.replace(/\s+/g, "") : text.replace(/\n/g, " ");
+  if (!t) fail("اكتب نص.");
+  const pat = railPattern(t.length, Math.min(rails, Math.max(2, t.length)));
+  const R = Math.min(rails, Math.max(2, t.length));
+  const idx = [...t].map((_, i) => i).sort((a, b) => pat[a] - pat[b] || a - b);
+  let out;
+  if (mode === "enc"){
+    out = idx.map(i => t[i]).join("");
+  } else {
+    const res = new Array(t.length);
+    idx.forEach((orig, k) => res[orig] = t[k]);
+    out = res.join("");
+  }
+  // zigzag display (always the plaintext layout)
+  const plain = mode === "enc" ? t : out;
+  let show = "";
+  for (let r = 0; r < R; r++){
+    show += [...plain].map((ch, i) => pat[i] === r ? ch : "·").join(" ") + "\n";
+  }
+  return { out, info: "Zigzag:\n" + show };
+}
 
-            <label>النتيجة:</label>
-            <div id="vig-result" class="result-box"></div>
-        </div>
+/* ---------- 7) Hill ---------- */
+function det(m){
+  const n = m.length;
+  if (n === 1) return m[0][0];
+  if (n === 2) return m[0][0] * m[1][1] - m[0][1] * m[1][0];
+  let s = 0;
+  for (let j = 0; j < n; j++) s += (j % 2 ? -1 : 1) * m[0][j] * det(minor(m, 0, j));
+  return s;
+}
+function minor(m, r, c){ return m.filter((_, i) => i !== r).map(row => row.filter((_, j) => j !== c)); }
+function modInv(a, m){
+  a = mod(a, m);
+  for (let x = 1; x < m; x++) if ((a * x) % m === 1) return x;
+  return null;
+}
+function hillInverse(K){
+  const n = K.length, dt = mod(det(K), 26), inv = modInv(dt, 26);
+  if (inv === null) fail(`المصفوفة غير قابلة للعكس mod 26 (المحدد = ${dt}). جرّب مفتاح تاني.`);
+  const res = [];
+  for (let i = 0; i < n; i++){
+    res.push([]);
+    for (let j = 0; j < n; j++){
+      const cof = ((i + j) % 2 ? -1 : 1) * det(n === 2 ? [[K[1 - j][1 - i]]] : minor(K, j, i));
+      res[i].push(mod(cof * inv, 26));
+    }
+  }
+  return res;
+}
+function hill(mode, text, p){
+  const n = parseInt(p.size, 10);
+  const key = onlyLetters(p.key);
+  if (key.length !== n * n) fail(`المفتاح لازم يكون ${n * n} حروف بالظبط (مصفوفة ${n}×${n}).`);
+  const K = [];
+  for (let i = 0; i < n; i++) K.push([...key.slice(i * n, i * n + n)].map(c => c.charCodeAt(0) - 65));
+  const M = mode === "enc" ? (hillInverse(K), K) : hillInverse(K);
+  let t = onlyLetters(text);
+  if (!t) fail("اكتب نص (حروف إنجليزية).");
+  let padded = false;
+  if (mode === "enc"){ while (t.length % n){ t += "X"; padded = true; } }
+  else if (t.length % n) fail(`النص المشفر لازم يكون طوله من مضاعفات ${n}.`);
+  let out = "";
+  for (let i = 0; i < t.length; i += n){
+    const v = [...t.slice(i, i + n)].map(c => c.charCodeAt(0) - 65);
+    for (let r = 0; r < n; r++){
+      let s = 0; for (let c = 0; c < n; c++) s += M[r][c] * v[c];
+      out += A[mod(s, 26)];
+    }
+  }
+  const fmt = m => m.map(r => r.map(x => String(x).padStart(2, " ")).join(" ")).join("\n");
+  let info = "Key matrix:\n" + fmt(K) + "\n\nMatrix used (" + (mode === "enc" ? "K" : "K⁻¹ mod 26") + "):\n" + fmt(M);
+  if (padded) info += "\n\nتمت إضافة X في النهاية لإكمال البلوك.";
+  return { out, info };
+}
+
+/* ---------- UI config ---------- */
+const CIPHERS = [
+  { id:"playfair", name:"Playfair", fn:playfair,
+    desc:"تشفير بالأزواج باستخدام مصفوفة 5×5 مبنية من الكلمة المفتاحية (I و J حرف واحد).",
+    fields:[{id:"key",label:"المفتاح (Keyword)",type:"text",value:"MONARCHY"}], text:"HELLO WORLD",
+    note:"عند فك التشفير ممكن يظهر حرف X زيادة (حشو) بين الحروف المكررة أو في النهاية." },
+  { id:"vigenere", name:"Vigenère", fn:vigenere,
+    desc:"تشفير قيصر متعدد الإزاحات باستخدام كلمة مفتاحية بتتكرر على النص.",
+    fields:[{id:"key",label:"المفتاح (Keyword)",type:"text",value:"LEMON"}], text:"ATTACK AT DAWN",
+    note:"الحروف الكبيرة والصغيرة والرموز بتتحافظ على مكانها." },
+  { id:"caesar", name:"Caesar", fn:caesar,
+    desc:"إزاحة كل حرف بعدد ثابت من المواضع في الأبجدية.",
+    fields:[{id:"shift",label:"الإزاحة (Shift)",type:"number",value:3}], text:"Hello, World!",
+    note:"ممكن تستخدم رقم سالب أو أكبر من 26." },
+  { id:"otp", name:"One-Time Pad", fn:otp,
+    desc:"مفتاح عشوائي بطول النص بالظبط، يُستخدم مرة واحدة فقط (هنا نسخة الحروف mod 26).",
+    fields:[{id:"key",label:"المفتاح (عشوائي بطول النص)",type:"text",value:""}], text:"HELLO",
+    extra:{label:"🎲 توليد مفتاح عشوائي", fn:(get,set,textEl)=>{ const n=[...textEl.value].filter(isLetter).length; if(!n){alert("اكتب النص الأول.");return;} set("key", randomKey(n)); }},
+    note:"احتفظ بالمفتاح — من غيره مستحيل فك التشفير." },
+  { id:"columnar", name:"Columnar", fn:columnar,
+    desc:"كتابة النص في صفوف تحت كلمة المفتاح ثم قراءة الأعمدة حسب ترتيب حروف المفتاح الأبجدي.",
+    fields:[{id:"key",label:"المفتاح (Keyword)",type:"text",value:"ZEBRAS"},{id:"nospace",label:"حذف المسافات من النص",type:"checkbox",value:true}], text:"WE ARE DISCOVERED FLEE AT ONCE",
+    note:"فك التشفير بيدعم الصفوف الناقصة (بدون حشو)." },
+  { id:"rail", name:"Rail Fence", fn:railFence,
+    desc:"كتابة النص بشكل متعرج (zigzag) على عدد من القضبان ثم قراءته قضيب بقضيب.",
+    fields:[{id:"rails",label:"عدد القضبان (Rails)",type:"number",value:3},{id:"nospace",label:"حذف المسافات من النص",type:"checkbox",value:true}], text:"WE ARE DISCOVERED FLEE AT ONCE",
+    note:"الرسم المعروض هو شكل الـ zigzag للنص الأصلي." },
+  { id:"hill", name:"Hill", fn:hill,
+    desc:"تشفير بالأبجدية الرقمية باستخدام ضرب مصفوفات mod 26 (بلوكات 2 أو 3 حروف).",
+    fields:[{id:"size",label:"حجم المصفوفة",type:"select",value:"3",options:[["2","2×2 (4 حروف)"],["3","3×3 (9 حروف)"]]},
+            {id:"key",label:"المفتاح (حروف بعدد n²)",type:"text",value:"GYBNQKURP"}], text:"ACT",
+    note:"المفتاح لازم تكون قيمة محدده gcd(det, 26) = 1. أمثلة: 3×3 = GYBNQKURP ، 2×2 = HILL." }
+];
+
+const tabsEl = document.getElementById("tabs");
+const panel = document.getElementById("panel");
+let current = 0;
+
+CIPHERS.forEach((c, i) => {
+  const b = document.createElement("button");
+  b.className = "tab"; b.textContent = (i + 1) + ". " + c.name;
+  b.onclick = () => { current = i; render(); };
+  tabsEl.appendChild(b);
+});
+
+function render(){
+  [...tabsEl.children].forEach((b, i) => b.classList.toggle("active", i === current));
+  const c = CIPHERS[current];
+  let html = `<h2>${c.name}</h2><p class="desc">${c.desc}</p>
+    <label for="inp">النص (Text)</label>
+    <textarea id="inp" dir="ltr">${c.text}</textarea>`;
+  c.fields.forEach(f => {
+    if (f.type === "checkbox"){
+      html += `<label class="check"><input type="checkbox" id="f_${f.id}" ${f.value ? "checked" : ""}> ${f.label}</label>`;
+    } else if (f.type === "select"){
+      html += `<label for="f_${f.id}">${f.label}</label><select id="f_${f.id}">` +
+        f.options.map(o => `<option value="${o[0]}" ${o[0] === f.value ? "selected" : ""}>${o[1]}</option>`).join("") + `</select>`;
+    } else {
+      html += `<label for="f_${f.id}">${f.label}</label><input id="f_${f.id}" type="${f.type}" value="${f.value}">`;
+    }
+  });
+  html += `<div class="row">
+      <button class="btn" id="enc">🔒 تشفير</button>
+      <button class="btn dec" id="dec">🔓 فك التشفير</button>
+      ${c.extra ? `<button class="btn sec" id="extra">${c.extra.label}</button>` : ""}
+      <button class="btn sec" id="swap">⇅ الناتج ← مدخل</button>
+      <button class="btn sec" id="copy">📋 نسخ الناتج</button>
     </div>
+    <div class="out">
+      <label>الناتج (Result)</label>
+      <div class="box" id="out"></div>
+      <div class="info" id="info"></div>
+    </div>
+    <p class="note">${c.note}</p>`;
+  panel.innerHTML = html;
 
-    <script>
-        // ================= خوارزمية Playfair =================
-        function generatePlayfairMatrix(key) {
-            key = key.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
-            let alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"; // بدون J
-            let combined = key + alphabet;
-            let matrix = [];
-            let seen = new Set();
-
-            for (let char of combined) {
-                if (!seen.has(char)) {
-                    seen.add(char);
-                    matrix.push(char);
-                }
-            }
-            return matrix;
-        }
-
-        function updatePlayfairMatrix() {
-            const key = document.getElementById('pf-key').value;
-            const matrix = generatePlayfairMatrix(key);
-            const grid = document.getElementById('pf-matrix');
-            grid.innerHTML = '';
-            matrix.forEach(char => {
-                const cell = document.createElement('div');
-                cell.className = 'matrix-cell';
-                cell.textContent = char === 'I' ? 'I/J' : char;
-                grid.appendChild(cell);
-            });
-        }
-
-        function preparePlayfairText(text, isEncrypt) {
-            text = text.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
-            if (!isEncrypt) return text;
-
-            let prepared = "";
-            for (let i = 0; i < text.length; i++) {
-                prepared += text[i];
-                if (i + 1 < text.length) {
-                    if (text[i] === text[i + 1]) {
-                        prepared += 'X';
-                    } else {
-                        prepared += text[i + 1];
-                        i++;
-                    }
-                }
-            }
-            if (prepared.length % 2 !== 0) {
-                prepared += 'X';
-            }
-            return prepared;
-        }
-
-        function handlePlayfair(isEncrypt) {
-            const key = document.getElementById('pf-key').value;
-            const rawText = document.getElementById('pf-text').value;
-            const matrix = generatePlayfairMatrix(key);
-            const text = preparePlayfairText(rawText, isEncrypt);
-
-            if (!text) {
-                document.getElementById('pf-result').textContent = "يرجى إدخال نص يحتوي على حروف إنجليزية.";
-                return;
-            }
-
-            let result = "";
-            let shift = isEncrypt ? 1 : 4; // +1 للتشفير، +4 (أي -1 mod 5) لفك التشفير
-
-            for (let i = 0; i < text.length; i += 2) {
-                let a = text[i];
-                let b = text[i + 1] || 'X';
-
-                let idxA = matrix.indexOf(a);
-                let idxB = matrix.indexOf(b);
-
-                let rowA = Math.floor(idxA / 5), colA = idxA % 5;
-                let rowB = Math.floor(idxB / 5), colB = idxB % 5;
-
-                if (rowA === rowB) {
-                    // نفس الصف
-                    result += matrix[rowA * 5 + (colA + shift) % 5];
-                    result += matrix[rowB * 5 + (colB + shift) % 5];
-                } else if (colA === colB) {
-                    // نفس العمود
-                    result += matrix[((rowA + shift) % 5) * 5 + colA];
-                    result += matrix[((rowB + shift) % 5) * 5 + colB];
-                } else {
-                    // مستطيل
-                    result += matrix[rowA * 5 + colB];
-                    result += matrix[rowB * 5 + colA];
-                }
-            }
-
-            document.getElementById('pf-result').textContent = result;
-        }
-
-        // ================= خوارزمية Vigenère =================
-        function handleVigenere(isEncrypt) {
-            const rawKey = document.getElementById('vig-key').value.toUpperCase().replace(/[^A-Z]/g, '');
-            const text = document.getElementById('vig-text').value.toUpperCase();
-
-            if (!rawKey) {
-                document.getElementById('vig-result').textContent = "يرجى إدخال مفتاح (حروف إنجليزية).";
-                return;
-            }
-            if (!text) {
-                document.getElementById('vig-result').textContent = "يرجى إدخال النص.";
-                return;
-            }
-
-            let result = "";
-            let keyIndex = 0;
-
-            for (let i = 0; i < text.length; i++) {
-                let charCode = text.charCodeAt(i);
-
-                // التعامل مع الحروف الإنجليزية A-Z فقط وترك المسافات كما هي
-                if (charCode >= 65 && charCode <= 90) {
-                    let p = charCode - 65;
-                    let k = rawKey.charCodeAt(keyIndex % rawKey.length) - 65;
-
-                    let c = isEncrypt ? (p + k) % 26 : (p - k + 26) % 26;
-                    result += String.fromCharCode(c + 65);
-                    keyIndex++;
-                } else {
-                    result += text[i];
-                }
-            }
-
-            document.getElementById('vig-result').textContent = result;
-        }
-
-        // تشغيل مصفوفة Playfair الافتراضية عند فتح الصفحة
-        window.onload = updatePlayfairMatrix;
-    </script>
+  const $ = id => document.getElementById(id);
+  const params = () => { const p = {}; c.fields.forEach(f => { const el = $("f_" + f.id); p[f.id] = f.type === "checkbox" ? el.checked : el.value; }); return p; };
+  const run = mode => {
+    const outEl = $("out"), infoEl = $("info");
+    try {
+      const r = c.fn(mode, $("inp").value, params());
+      outEl.classList.remove("err"); outEl.textContent = r.out; infoEl.textContent = r.info || "";
+    } catch (e){
+      outEl.classList.add("err"); outEl.textContent = e.message; infoEl.textContent = "";
+    }
+  };
+  $("enc").onclick = () => run("enc");
+  $("dec").onclick = () => run("dec");
+  $("swap").onclick = () => { const o = $("out"); if (o.textContent && !o.classList.contains("err")) $("inp").value = o.textContent; };
+  $("copy").onclick = async () => { try { await navigator.clipboard.writeText($("out").textContent); $("copy").textContent = "✅ تم النسخ"; setTimeout(() => $("copy").textContent = "📋 نسخ الناتج", 1200); } catch(e){} };
+  if (c.extra) $("extra").onclick = () => c.extra.fn(null, (id, v) => $("f_" + id).value = v, $("inp"));
+}
+render();
+</script>
 </body>
 </html>
